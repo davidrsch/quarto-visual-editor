@@ -1,0 +1,132 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "useDefineForClassFields": true,
+        "lib": [
+            "DOM",
+            "DOM.Iterable",
+            "ESNext"
+        ],
+        "allowJs": false,
+        "skipLibCheck": true,
+        "noImplicitAny": false,
+        "esModuleInterop": false,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "module": "ESNext",
+        "moduleResolution": "Node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx",
+        "baseUrl": ".",
+        "paths": {
+            "editor-ui": [
+                "packages/editor-ui/src"
+            ],
+            "editor-ui/*": [
+                "packages/editor-ui/src/*"
+            ],
+            "editor": [
+                "packages/editor/src"
+            ],
+            "editor/*": [
+                "packages/editor/src/*"
+            ],
+            "editor-types": [
+                "packages/editor-types/src"
+            ],
+            "editor-types/*": [
+                "packages/editor-types/src/*"
+            ],
+            "editor-core": [
+                "packages/editor-core/src"
+            ],
+            "editor-core/*": [
+                "packages/editor-core/src/*"
+            ],
+            "core": [
+                "packages/core/src"
+            ],
+            "core/*": [
+                "packages/core/src/*"
+            ],
+            "core-browser": [
+                "packages/core-browser/src"
+            ],
+            "core-browser/*": [
+                "packages/core-browser/src/*"
+            ],
+            "ui-widgets": [
+                "packages/ui-widgets/src"
+            ],
+            "ui-widgets/*": [
+                "packages/ui-widgets/src/*"
+            ],
+            "@quarto/editor-ui": [
+                "packages/editor-ui/src"
+            ],
+            "@quarto/editor-ui/*": [
+                "packages/editor-ui/src/*"
+            ],
+            "@quarto/editor": [
+                "packages/editor/src"
+            ],
+            "@quarto/editor/*": [
+                "packages/editor/src/*"
+            ],
+            "@quarto/editor-types": [
+                "packages/editor-types/src"
+            ],
+            "@quarto/editor-types/*": [
+                "packages/editor-types/src/*"
+            ],
+            "@quarto/editor-core": [
+                "packages/editor-core/src"
+            ],
+            "@quarto/editor-core/*": [
+                "packages/editor-core/src/*"
+            ],
+            "@quarto/core": [
+                "packages/core/src"
+            ],
+            "@quarto/core/*": [
+                "packages/core/src/*"
+            ],
+            "@quarto/core-browser": [
+                "packages/core-browser/src"
+            ],
+            "@quarto/core-browser/*": [
+                "packages/core-browser/src/*"
+            ],
+            "@quarto/ui-widgets": [
+                "packages/ui-widgets/src"
+            ],
+            "@quarto/ui-widgets/*": [
+                "packages/ui-widgets/src/*"
+            ],
+            "@quarto/mapped-string": [
+                "packages/mapped-string/src"
+            ],
+            "@quarto/mapped-string/*": [
+                "packages/mapped-string/src/*"
+            ],
+            "@quarto/tidyverse-errors": [
+                "packages/tidyverse-errors/src"
+            ],
+            "@quarto/tidyverse-errors/*": [
+                "packages/tidyverse-errors/src/*"
+            ]
+        }
+    },
+    "include": [
+        "src",
+        "packages/*/src"
+    ],
+    "references": [
+        {
+            "path": "./tsconfig.node.json"
+        }
+    ]
+}

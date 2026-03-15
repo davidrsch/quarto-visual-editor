@@ -13,6 +13,7 @@
  *
  */
 
+console.error("[VE] index.tsx MODULE EVALUATING");
 import React from "react";
 import { createRoot } from 'react-dom/client';
 
@@ -31,8 +32,10 @@ import "./styles.scss"
 
 async function runEditor() {
   try {
+    console.log("[VE] Starting runEditor...");
     // init localization
     await initEditorTranslations();
+    console.log("[VE] Translations initialized");
 
     // connection to host
     const hostTarget = {
@@ -52,16 +55,42 @@ async function runEditor() {
     const request = visualEditorJsonRpcRequestTransport(hostTarget)
     const host = visualEditorHostClient(hostTarget, request);
 
+    console.log("[VE] Requesting host context...");
     // get host context
-    const context = await host.getHostContext();
+    let context = await host.getHostContext();
+    console.log("[VE] Host context received", context);
 
+    // Guard: when running standalone (no Quartostone parent), the host context
+    // may never arrive and `getHostContext` resolves with `undefined`. Provide a
+    // safe default so React can still mount and the editor functions as-is.
+    if (!context) {
+      context = {
+        documentPath: null,
+        resourceDir: '/',
+        projectDir: undefined,
+        isWindowsDesktop: navigator.platform.toLowerCase().includes('win'),
+        executableLanguages: [],
+      } as any;
+
+      // Also inject a default VS Code theme into the standalone HTML element 
+      // so `theme.ts` doesn't crash on `editorFontSize.match()`
+      const htmlStyle = document.documentElement.style;
+      htmlStyle.setProperty('--vscode-editor-font-size', '13px');
+      htmlStyle.setProperty('--vscode-editor-font-family', 'Consolas, monospace');
+      htmlStyle.setProperty('--vscode-editor-background', '#ffffff');
+      htmlStyle.setProperty('--vscode-editor-foreground', '#000000');
+    }
+
+    console.log("[VE] Initializing store...");
     // initialize store and read initial prefs
     const store = await initializeStore(request);
+    console.log("[VE] Store initialized");
 
     // create editor id
     const editorId = uuid.v4();
     store.dispatch(addEditor(editorId));
 
+    console.log("[VE] Mounting React app...");
     // render
     const root = createRoot(document.getElementById('root')!);
     setEditorTheme(editorThemeFromStore(store));

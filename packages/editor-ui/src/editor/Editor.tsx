@@ -20,23 +20,23 @@ import { useDispatch } from 'react-redux';
 
 import { JsonRpcRequestTransport } from 'core';
 
-import { 
-  defaultPrefs, 
-  EditorServer, 
-  EditorServices, 
-  isSourcePos, 
-  NavLocation, 
-  Prefs, 
-  PrefsProvider, 
-  SourcePos 
+import {
+  defaultPrefs,
+  EditorServer,
+  EditorServices,
+  isSourcePos,
+  NavLocation,
+  Prefs,
+  PrefsProvider,
+  SourcePos
 } from 'editor-types';
 
-import { 
-  Editor as PMEditor, 
-  EventType, 
+import {
+  Editor as PMEditor,
+  EventType,
   NavigationType,
-  UpdateEvent, 
-  OutlineChangeEvent, 
+  UpdateEvent,
+  OutlineChangeEvent,
   StateChangeEvent,
   EditorFormat,
   kQuartoDocType,
@@ -57,38 +57,38 @@ import {
   ExtensionFn
 } from 'editor';
 
-import { 
-  CommandManagerContext, 
-  Commands 
+import {
+  CommandManagerContext,
+  Commands
 } from '../commands';
 
 import { editorDialogs } from '../dialogs';
 
-import { 
+import {
   EditorError,
   editorLoadError,
-  editorLoading, 
-  editorTitle, 
-  isEditorError, 
-  setEditorLoadError, 
-  setEditorLoading, 
-  setEditorOutline, 
-  setEditorSelection, 
-  setEditorTitle, 
-  useEditorSelector, 
-  useGetPrefsQuery, 
-  useSetPrefsMutation 
+  editorLoading,
+  editorTitle,
+  isEditorError,
+  setEditorLoadError,
+  setEditorLoading,
+  setEditorOutline,
+  setEditorSelection,
+  setEditorTitle,
+  useEditorSelector,
+  useGetPrefsQuery,
+  useSetPrefsMutation
 } from '../store';
 
-import { 
-  editorContext, 
-  useEditorSpelling 
+import {
+  editorContext,
+  useEditorSpelling
 } from '../context';
 
-import { 
-  editorProsemirrorCommands, 
-  editorExternalCommands, 
-  editorDebugCommands 
+import {
+  editorProsemirrorCommands,
+  editorExternalCommands,
+  editorDebugCommands
 } from './editor-commands';
 
 import { EditorOperationsContext } from './EditorOperationsContext';
@@ -114,18 +114,18 @@ export interface EditorProps {
   onEditorInit?: (editor: EditorOperations) => Promise<void>;
 }
 
-export const Editor : React.FC<EditorProps> = (props) => {
+export const Editor: React.FC<EditorProps> = (props) => {
 
   // prefs
   const { data: prefs = defaultPrefs() } = useGetPrefsQuery();
   const [setPrefs] = useSetPrefsMutation();
   // out of band prefs ref and provider (as non-react code needs to read and write prefs)
   const prefsRef = useRef<Prefs | null>(defaultPrefs());
-  const editorPrefs : PrefsProvider = { 
+  const editorPrefs: PrefsProvider = {
     prefs(): Prefs {
       return prefsRef.current || defaultPrefs();
     },
-    setPrefs: function (prefs: Record<string,unknown>): void {
+    setPrefs: function (prefs: Record<string, unknown>): void {
       setPrefs({ ...prefsRef.current!, ...prefs });
     }
   };
@@ -151,7 +151,7 @@ export const Editor : React.FC<EditorProps> = (props) => {
   const editorRef = useRef<PMEditor | null>(null);
   const commandsRef = useRef<Commands | null>(null);
   const spellingRef = useRef<EditorUISpelling | null>(null);
- 
+
   // subscribe/unsubscribe from editor events
   const editorEventsRef = useRef(new Array<VoidFunction>());
   function onEditorEvent<T>(event: EventType<T>, handler: (detail?: T) => void) {
@@ -168,18 +168,19 @@ export const Editor : React.FC<EditorProps> = (props) => {
       dispatch(setEditorLoadError(props.id, error));
     } else {
       const message = (error as Error).message || String(error);
+      const stack = (error as Error).stack || '';
       dispatch(setEditorLoadError(props.id, {
         icon: "error",
         title: t('Unexpected Error Loading Editor'),
-        description: [message]
+        description: [message, stack]
       }));
-    }  
+    }
   }
 
   // keep spelling provider up to date 
-  spellingRef.current = useEditorSpelling(props.uiContext.getDocumentPath() ||"(Untitled)", { 
+  spellingRef.current = useEditorSpelling(props.uiContext.getDocumentPath() || "(Untitled)", {
     invalidateWord: (word: string) => editorRef.current?.spellingInvalidateWord(word),
-    invalidateAllWords: () => editorRef.current?.spellingInvalidateAllWords() 
+    invalidateAllWords: () => editorRef.current?.spellingInvalidateAllWords()
   });
 
   // propagate resize when showOutline changes
@@ -189,7 +190,7 @@ export const Editor : React.FC<EditorProps> = (props) => {
 
   // initialize the editor
   const initEditor = useCallback(async () => {
-    
+
     try {
       const context = editorContext({
         prefs: () => editorPrefs,
@@ -197,48 +198,50 @@ export const Editor : React.FC<EditorProps> = (props) => {
         services: services.current,
         request: props.request,
         uiContext: props.uiContext,
-        display: () => props.display(() => commandsRef.current!), 
+        display: () => props.display(() => commandsRef.current!),
         dialogs: () => dialogs.current,
         spelling: () => spellingRef.current!,
         extensions: props.extensions
       })
-  
+
       editorRef.current = await createEditor(
-        parentRef.current!, 
+        parentRef.current!,
         props.options || {},
         props.options?.initialTheme || defaultTheme(),
         context
       );
-      
+
       showPandocWarnings(editorRef.current?.getPandocFormat());
-  
+
       // subscribe to events
       onEditorEvent(UpdateEvent, onEditorDocChanged);
       onEditorEvent(OutlineChangeEvent, onEditorOutlineChanged);
       onEditorEvent(StateChangeEvent, onEditorStateChanged);
-  
+
       // add commands
-      cmDispatch({ type: "ADD_COMMANDS", payload: [
-        ...editorProsemirrorCommands(editorRef.current!.commands()),
-        ...editorExternalCommands(editorRef.current!),
-        ...editorDebugCommands(editorRef.current!),
-      ]});
-  
+      cmDispatch({
+        type: "ADD_COMMANDS", payload: [
+          ...editorProsemirrorCommands(editorRef.current!.commands()),
+          ...editorExternalCommands(editorRef.current!),
+          ...editorDebugCommands(editorRef.current!),
+        ]
+      });
+
       // set menus
-      cmDispatch({ type: "SET_MENUS", payload: editorRef.current!.getMenus()});
-  
+      cmDispatch({ type: "SET_MENUS", payload: editorRef.current!.getMenus() });
+
       // load editor
       if (props.onEditorInit) {
         await props.onEditorInit(editor);
-      } 
-  
+      }
+
       // set title and outline
       dispatch(setEditorTitle(props.id, editorRef.current?.getTitle() || ''));
       onEditorOutlineChanged();
     } catch (error) {
       editorLoadFailed(error);
     }
-    
+
   }, []);
 
   // provide EditorOperations -- we need to provide a fully bound instance
@@ -247,11 +250,11 @@ export const Editor : React.FC<EditorProps> = (props) => {
   // to editorRef.current!  
   const editor: EditorOperations = {
     setTitle(title: string) {
-     editorRef.current!.setTitle(title)
+      editorRef.current!.setTitle(title)
     },
     async setMarkdown(
-      markdown: string, 
-      options: PandocWriterOptions, 
+      markdown: string,
+      options: PandocWriterOptions,
       emitUpdate: boolean
     ) {
 
@@ -277,7 +280,7 @@ export const Editor : React.FC<EditorProps> = (props) => {
       const result = await editor.setMarkdown(markdown, options, emitUpdate);
 
       // check for load error
-      const kUnableToActivateVisualMode =  t('Unable to Activate Visual Mode');
+      const kUnableToActivateVisualMode = t('Unable to Activate Visual Mode');
       if (Object.keys(result.unparsed_meta).length > 0) {
         editorLoadFailed({
           icon: "issue",
@@ -297,7 +300,7 @@ export const Editor : React.FC<EditorProps> = (props) => {
           icon: "issue",
           title: kUnableToActivateVisualMode,
           description: [t('Document contains example lists which are'),
-                        t('not currently supported by the visual editor.')]
+          t('not currently supported by the visual editor.')]
         });
         return null;
       } else {
@@ -334,17 +337,17 @@ export const Editor : React.FC<EditorProps> = (props) => {
     blur() {
       editorRef.current?.blur();
     },
-    focus(navigation?: NavLocation) {  
+    focus(navigation?: NavLocation) {
       if (navigation) {
         if (isSourcePos(navigation)) {
           editorRef.current?.navigateToSourcePos(navigation);
         } else {
           editorRef.current?.navigate(
-            NavigationType.XRef, 
+            NavigationType.XRef,
             `${navigation.type}:${navigation.id}`,
             false, false
           );
-        } 
+        }
       }
       // focus after navigation so that we don't get 
       // trapped focusing inside a code view
@@ -383,20 +386,20 @@ export const Editor : React.FC<EditorProps> = (props) => {
 
   // dispatch outline changes
   const onEditorOutlineChanged = () => {
-     const outline = editorRef.current?.getOutline();
-     if (outline) {
-       dispatch(setEditorOutline(props.id, outline));
-     }
+    const outline = editorRef.current?.getOutline();
+    if (outline) {
+      dispatch(setEditorOutline(props.id, outline));
+    }
   }
 
   // dispatch selection changes (allows command manager to update)
   const onEditorStateChanged = () => {
     const selection = editorRef.current!.getSelection();
-    cmDispatch( { type: "SET_SELECTION", payload: selection } );
+    cmDispatch({ type: "SET_SELECTION", payload: selection });
     dispatch(setEditorSelection(props.id, selection));
   }
 
-  
+
   // editor initialization
   useEffect(() => {
     // initialize editor
@@ -443,11 +446,11 @@ export const Editor : React.FC<EditorProps> = (props) => {
 
   // render
   return (
-    <EditorOperationsContext.Provider value={editor}> 
+    <EditorOperationsContext.Provider value={editor}>
       {editorLoadingUI(props.uiContext, loading, loadError)}
       <div id="editor" className={classes.join(' ')} ref={parentRef}>
         <EditorFind />
-        <EditorOutlineSidebar editorId={props.id}/> 
+        <EditorOutlineSidebar editorId={props.id} />
       </div>
     </EditorOperationsContext.Provider>
   );
@@ -473,23 +476,24 @@ const editorLoadingUI = (uiContext: EditorUIContext, loading: boolean, loadError
     return (
       <div className={['ProseMirror'].join(' ')}>
         <div className='body pm-editing-root-node pm-text-color pm-background-color'>
-          <Spinner className={styles.editorLoadingSpinner} size="huge"  />
+          <Spinner className={styles.editorLoadingSpinner} size="huge" />
         </div>
       </div>
     );
   } else {
-    return <div/>;
+    return <div />;
   }
 }
 const createEditor = async (
-  parent: HTMLElement, 
+  parent: HTMLElement,
   options: EditorOptions,
   theme: EditorTheme,
   context: EditorContext
-) : Promise<PMEditor> => {
+): Promise<PMEditor> => {
   const format: EditorFormat = {
     pandocMode: 'markdown',
-    pandocExtensions: '',
+    pandocExtensions: options.pandocExtensions || 
+      '+fenced_divs+bracketed_spans+native_divs+native_spans+pipe_tables+grid_tables+table_captions+strikeout+superscript+subscript+smallcaps+raw_attribute+raw_html+tex_math_dollars+task_lists+header_attributes+fenced_code_attributes+inline_code_attributes+link_attributes',
     rmdExtensions: {
       codeChunks: true,
       bookdownPart: true,

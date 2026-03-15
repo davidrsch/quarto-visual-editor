@@ -31,15 +31,15 @@ export function editorThemeFromVSCode(fontFamily?: string, fontSizePx?: number) 
   const theme = defaultTheme();
 
   // get vscode theme colors
-  const colors: Record<string,string> = {};
+  const colors: Record<string, string> = {};
   Object.values(document.getElementsByTagName('html')[0].style)
     .forEach((rv) => {
       colors[rv] = document
         .getElementsByTagName('html')[0]
         .style.getPropertyValue(rv)
     }
-  );
-  
+    );
+
   const bodyCls = document.body.classList;
   const hcLight = bodyCls.contains('vscode-high-contrast-light');
   const hcDark = bodyCls.contains('vscode-high-contrast') && !hcLight;
@@ -51,7 +51,7 @@ export function editorThemeFromVSCode(fontFamily?: string, fontSizePx?: number) 
   theme.selectionForegroundColor = colors["--vscode-editor-selectionForeground"]
   theme.nodeSelectionColor = colors["--vscode-notebook-focusedCellBorder"];
   theme.backgroundColor = colors["--vscode-editor-background"];
-  theme.metadataBackgroundColor =  theme.backgroundColor;
+  theme.metadataBackgroundColor = theme.backgroundColor;
   theme.chunkBackgroundColor = colors["--vscode-notebook-cellEditorBackground"];
   theme.spanBackgroundColor = theme.chunkBackgroundColor;
   theme.divBackgroundColor = theme.chunkBackgroundColor;
@@ -62,12 +62,12 @@ export function editorThemeFromVSCode(fontFamily?: string, fontSizePx?: number) 
   theme.linkTextColor = colors["--vscode-textLink-foreground"];
   theme.placeholderTextColor = colors["--vscode-editorGhostText-foreground"];
   theme.invisibleTextColor = colors["--vscode-editorWhitespace-foreground"];
-  theme.markupTextColor = theme.darkMode 
-    ? colors["--vscode-charts-orange"] 
+  theme.markupTextColor = theme.darkMode
+    ? colors["--vscode-charts-orange"]
     : colors["--vscode-editorInfo-foreground"];
   theme.findTextBackgroundColor = colors["--vscode-editor-foldBackground"];
   theme.findTextBorderColor = "transparent";
-  theme.borderBackgroundColor = theme.darkMode 
+  theme.borderBackgroundColor = theme.darkMode
     ? colors["--vscode-titleBar-activeBackground"]
     : colors["--vscode-titleBar-inactiveBackground"];
   theme.gutterBackgroundColor = theme.borderBackgroundColor;
@@ -78,20 +78,20 @@ export function editorThemeFromVSCode(fontFamily?: string, fontSizePx?: number) 
   theme.surfaceWidgetTextColor = theme.gutterTextColor;
   theme.focusOutlineColor = colors["--vscode-focusBorder"];
   theme.paneBorderColor = theme.darkMode ? colors["--vscode-commandCenter-border"] : colors["--vscode-panel-border"];
-  theme.blockBorderColor = theme.darkMode 
-  ? theme.paneBorderColor
-  : colors["--vscode-notebook-cellBorderColor"];
+  theme.blockBorderColor = theme.darkMode
+    ? theme.paneBorderColor
+    : colors["--vscode-notebook-cellBorderColor"];
   theme.hrBackgroundColor = theme.highContrast ? colors["--vscode-list-deemphasizedForeground"] : theme.blockBorderColor;
   theme.fixedWidthFont = colors["--vscode-editor-font-family"];
   theme.proportionalFont = fontFamily || defaultPrefs().fontFamily;
 
   // if not font size is specified then compute it from vscode css
   if (!fontSizePx) {
-    const editorFontSize = colors["--vscode-editor-font-size"];
+    const editorFontSize = colors["--vscode-editor-font-size"] || "13px";
     const match = editorFontSize.match(/(\d+)px/);
     fontSizePx = match ? parseInt(match[1]) : 12;
   }
-  const fontSizePt = Math.round(fontSizePx / 1.333) ;
+  const fontSizePt = Math.round(fontSizePx / 1.333);
   theme.fixedWidthFontSizePt = fontSizePt;
   theme.proportionalFontSizePt = fontSizePt + 1;
   theme.suggestWidgetBackgroundColor = colors["--vscode-editorSuggestWidget-background"];

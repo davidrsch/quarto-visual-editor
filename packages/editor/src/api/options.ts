@@ -28,4 +28,5 @@ export interface EditorOptions {
   readonly cannotEditUntitled?: boolean;
   readonly initialTheme?: EditorTheme;
   readonly defaultCellTypePython?: boolean;
+  readonly pandocExtensions?: string;
 }

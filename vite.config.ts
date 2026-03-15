@@ -5,10 +5,14 @@ import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
 
 export default defineConfig({
+    base: '/visual-editor/',
+    build: {
+        target: 'esnext',
+        sourcemap: true,
+    },
     plugins: [
         react(),
-        wasm(),
-        topLevelAwait()
+        wasm()
     ],
     resolve: {
         alias: {

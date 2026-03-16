@@ -100,8 +100,12 @@ const EditorContainer: React.FC<EditorContainerProps> = (props) => {
     };
   }
   
+  const isDark = document.body.classList.contains('bp4-dark') || document.body.classList.contains('vscode-dark');
+  if (isDark) {
+    document.body.classList.add('bp4-dark');
+  }
   return (
-    <FluentProvider theme={activeFluentTheme}>
+    <FluentProvider theme={fluentTheme(isDark)}>
       <div 
         className={styles.editorParent} 
         onKeyDown={keyboardEventHandler(handleKeyDown)} 

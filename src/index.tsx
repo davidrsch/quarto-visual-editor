@@ -93,7 +93,8 @@ async function runEditor() {
     console.log("[VE] Mounting React app...");
     // render
     const root = createRoot(document.getElementById('root')!);
-    setEditorTheme(editorThemeFromStore(store));
+    // @ts-ignore: context.darkMode is added via our extended HostContext
+    setEditorTheme(editorThemeFromStore(store, (context as any).darkMode));
     root.render(<App store={store} editorId={editorId} host={host} context={context} request={request} />);
   } catch (error) {
     console.error(error);

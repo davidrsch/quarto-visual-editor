@@ -17,104 +17,62 @@
 import { defaultTheme } from "editor";
 import { defaultPrefs } from "editor-types";
 import { EditorUIStore, isSolarizedThemeActive, readPrefsApi } from "editor-ui";
+import { setDarkThemeActive } from "ui-widgets";
 
 
-export function editorThemeFromStore(store: EditorUIStore) {
+export function editorThemeFromStore(store: EditorUIStore, darkMode?: boolean) {
   const prefs = readPrefsApi(store);
-  const theme = editorThemeFromVSCode(prefs.fontFamily, prefs.fontSize);
+  const theme = editorThemeFromVSCode(prefs.fontFamily, prefs.fontSize, darkMode);
   return theme;
 }
 
-export function editorThemeFromVSCode(fontFamily?: string, fontSizePx?: number) {
+export function editorThemeFromVSCode(fontFamily?: string, fontSizePx?: number, initialDarkMode?: boolean) {
 
   // start with default
   const theme = defaultTheme();
 
-  // get vscode theme colors
-  const colors: Record<string, string> = {};
-  Object.values(document.getElementsByTagName('html')[0].style)
-    .forEach((rv) => {
-      colors[rv] = document
-        .getElementsByTagName('html')[0]
-        .style.getPropertyValue(rv)
-    }
-    );
-
+  // get vscode theme context
   const bodyCls = document.body.classList;
   const hcLight = bodyCls.contains('vscode-high-contrast-light');
   const hcDark = bodyCls.contains('vscode-high-contrast') && !hcLight;
-  theme.darkMode = bodyCls.contains('vscode-dark') || hcDark;
+  theme.darkMode = initialDarkMode ?? (bodyCls.contains('vscode-dark') || hcDark);
+  setDarkThemeActive(theme.darkMode);
   theme.highContrast = hcLight || hcDark;
   theme.solarizedMode = isSolarizedThemeActive();
-  theme.cursorColor = colors["--vscode-editorCursor-foreground"];
-  theme.selectionColor = colors["--vscode-editor-selectionBackground"];
-  theme.selectionForegroundColor = colors["--vscode-editor-selectionForeground"]
-  theme.nodeSelectionColor = colors["--vscode-notebook-focusedCellBorder"];
-  theme.backgroundColor = colors["--vscode-editor-background"];
-  theme.metadataBackgroundColor = theme.backgroundColor;
-  theme.chunkBackgroundColor = colors["--vscode-notebook-cellEditorBackground"];
-  theme.spanBackgroundColor = theme.chunkBackgroundColor;
-  theme.divBackgroundColor = theme.chunkBackgroundColor;
-  theme.commentColor = colors["--vscode-editor-foreground"];
-  theme.commentBackgroundColor = colors["--vscode-editor-findMatchHighlightBackground"];
-  theme.textColor = colors["--vscode-editor-foreground"];
-  theme.lightTextColor = colors["--vscode-breadcrumb-foreground"];
-  theme.linkTextColor = colors["--vscode-textLink-foreground"];
-  theme.placeholderTextColor = colors["--vscode-editorGhostText-foreground"];
-  theme.invisibleTextColor = colors["--vscode-editorWhitespace-foreground"];
-  theme.markupTextColor = theme.darkMode
-    ? colors["--vscode-charts-orange"]
-    : colors["--vscode-editorInfo-foreground"];
-  theme.findTextBackgroundColor = colors["--vscode-editor-foldBackground"];
-  theme.findTextBorderColor = "transparent";
-  theme.borderBackgroundColor = theme.darkMode
-    ? colors["--vscode-titleBar-activeBackground"]
-    : colors["--vscode-titleBar-inactiveBackground"];
-  theme.gutterBackgroundColor = theme.borderBackgroundColor;
-  theme.gutterTextColor = colors["--vscode-editorWidget-foreground"];
-  theme.toolbarBackgroundColor = theme.backgroundColor;
-  theme.toolbarTextColor = theme.gutterTextColor;
-  theme.disabledTextColor = colors["--vscode-disabledForeground"];
-  theme.surfaceWidgetTextColor = theme.gutterTextColor;
-  theme.focusOutlineColor = colors["--vscode-focusBorder"];
-  theme.paneBorderColor = theme.darkMode ? colors["--vscode-commandCenter-border"] : colors["--vscode-panel-border"];
-  theme.blockBorderColor = theme.darkMode
-    ? theme.paneBorderColor
-    : colors["--vscode-notebook-cellBorderColor"];
-  theme.hrBackgroundColor = theme.highContrast ? colors["--vscode-list-deemphasizedForeground"] : theme.blockBorderColor;
-  theme.fixedWidthFont = colors["--vscode-editor-font-family"];
+
+  // clean helper for direct variable extraction
+  const getVar = (name: string, fallback: string) => {
+    const val = document.documentElement.style.getPropertyValue(name);
+    return (val && val.trim()) ? val.trim() : fallback;
+  };
+
+  // set properties based on mode
+  if (theme.darkMode) {
+    theme.backgroundColor = getVar("--vscode-editor-background", "#1f1f1f");
+    theme.textColor = getVar("--vscode-editor-foreground", "#ffffff");
+    theme.metadataBackgroundColor = theme.backgroundColor;
+    theme.chunkBackgroundColor = getVar("--vscode-notebook-cellEditorBackground", "#252526");
+    theme.divBackgroundColor = theme.chunkBackgroundColor;
+    theme.spanBackgroundColor = theme.chunkBackgroundColor;
+    theme.selectionColor = getVar("--vscode-editor-selectionBackground", "#264f78");
+    theme.cursorColor = getVar("--vscode-editorCursor-foreground", "#aeafad");
+    theme.blockBorderColor = "#333333";
+    theme.paneBorderColor = getVar("--vscode-commandCenter-border", "#333333");
+    
+    // code palette
+    theme.code.keywordColor = getVar("--vscode-syntax-keyword", "#569cd6");
+    theme.code.atomColor = getVar("--vscode-syntax-atom", "#b5cea8");
+    theme.code.numberColor = getVar("--vscode-syntax-number", "#b5cea8");
+    theme.code.stringColor = getVar("--vscode-syntax-string", "#ce9178");
+    theme.code.commentColor = getVar("--vscode-syntax-comment", "#6a9955");
+  } else {
+    theme.backgroundColor = getVar("--vscode-editor-background", theme.backgroundColor);
+    theme.textColor = getVar("--vscode-editor-foreground", theme.textColor);
+  }
+
+  // font
+  theme.fixedWidthFont = getVar("--vscode-editor-font-family", "Consolas, monospace");
   theme.proportionalFont = fontFamily || defaultPrefs().fontFamily;
 
-  // if not font size is specified then compute it from vscode css
-  if (!fontSizePx) {
-    const editorFontSize = colors["--vscode-editor-font-size"] || "13px";
-    const match = editorFontSize.match(/(\d+)px/);
-    fontSizePx = match ? parseInt(match[1]) : 12;
-  }
-  const fontSizePt = Math.round(fontSizePx / 1.333);
-  theme.fixedWidthFontSizePt = fontSizePt;
-  theme.proportionalFontSizePt = fontSizePt + 1;
-  theme.suggestWidgetBackgroundColor = colors["--vscode-editorSuggestWidget-background"];
-  theme.suggestWidgetBorderColor = colors["--vscode-editorSuggestWidget-border"];
-  theme.suggestWidgetForegroundColor = colors["--vscode-editorSuggestWidget-foreground"];
-  theme.suggestWidgetSelectedForegroundColor = colors["--vscode-editorSuggestWidget-selectedForeground"];
-  theme.suggestWidgetSelectedIconForegroundColor = colors["--vscode-editorSuggestWidget-selectedIconForeground"];
-  theme.suggestWidgetSelectedBackgroundColor = colors["--vscode-editorSuggestWidget-selectedBackground"];
-  theme.suggestWidgetHighlightForegroundColor = colors["--vscode-editorSuggestWidget-highlightForeground"];
-  theme.suggestWidgetFocusHighlightForegroundColor = colors["--vscode-editorSuggestWidget-focusHighlightForeground"];
-  theme.symbolIconClassForegroundColor = colors["--vscode-symbolIcon-classForeground"];
-  theme.symbolIconConstantForegroundColor = colors["--vscode-symbolIcon-constantForeground)"];
-  theme.symbolIconEnumForegroundColor = colors["--vscode-symbolIcon-enumeratorForeground"];
-  theme.symbolIconFunctionForegroundColor = colors["--vscode-symbolIcon-functionForeground"];
-  theme.symbolIconInterfaceForegroundColor = colors["--vscode-symbolIcon-interfaceForeground"];
-  theme.symbolIconKeywordForegroundColor = colors["--vscode-symbolIcon-keywordForeground"];
-  theme.symbolIconMethodForegroundColor = colors["--vscode-symbolIcon-methodForeground"];
-  theme.symbolIconNamespaceForegroundColor = colors["--vscode-symbolIcon-namespaceForeground"];
-  theme.symbolIconPropertyForegroundColor = colors["--vscode-symbolIcon-propertyForeground"];
-  theme.symbolIconTextForegroundColor = colors["--vscode-symbolIcon-textForeground"];
-  theme.symbolIconTypeParameterForegroundColor = colors["--vscode-typeParameterForeground"];
-  theme.symbolIconVariableForegroundColor = colors["--vscode-symbolIcon-variableForeground"];
-  theme.debugStartForegroundColor = colors["--vscode-debugIcon-startForeground"];
-  theme.debugStepForgroundColor = colors["--vscode-debugIcon-stepOverForeground"];
   return theme;
-}
+}

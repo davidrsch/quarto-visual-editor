@@ -71,6 +71,7 @@ export interface HostContext {
   resourceDir: string;
   isWindowsDesktop: boolean;
   executableLanguages: string[];
+  darkMode?: boolean;
 }
 
 export interface VSCodeVisualEditorHost extends EditorDisplay, EditorUIImageResolver {
